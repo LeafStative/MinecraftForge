@@ -50,6 +50,7 @@ import net.minecraftforge.common.model.animation.IAnimationStateMachine;
 /**
  * Central hub for custom model loaders.
  */
+@Deprecated // Use the new model loading system and data generators instead.
 public class ModelLoaderRegistry
 {
     private static final Logger LOGGER = LogManager.getLogger();
@@ -78,6 +79,9 @@ public class ModelLoaderRegistry
     {
         loaders.add(loader);
         ((IReloadableResourceManager) Minecraft.getInstance().getResourceManager()).addReloadListener(loader);
+        // FIXME: Existing model loaders expect to receive a call as soon as they are registered, which was the old behaviour pre-1.13
+        // without this, their manager field is never initialized.
+        loader.onResourceManagerReload(Minecraft.getInstance().getResourceManager());
     }
 
     public static boolean loaded(ResourceLocation location)
@@ -188,6 +192,27 @@ public class ModelLoaderRegistry
             getModelOrMissing(dep);
         }
         return model;
+    }
+
+    public static boolean isCustomModel(ResourceLocation location)
+    {
+        ResourceLocation actual = getActualLocation(location);
+        for(ICustomModelLoader loader : loaders)
+        {
+            try
+            {
+                if(loader.accepts(actual))
+                {
+                    return true;
+                }
+            }
+            catch(Exception e)
+            {
+                LOGGER.warn("Exception checking if model {} can be loaded with loader {}", location, loader, e);
+            }
+        }
+
+        return false;
     }
 
     /**

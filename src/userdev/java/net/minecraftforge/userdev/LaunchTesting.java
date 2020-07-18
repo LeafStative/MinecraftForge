@@ -20,14 +20,18 @@
 package net.minecraftforge.userdev;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.mojang.authlib.Agent;
 import com.mojang.authlib.UserAuthentication;
 import com.mojang.authlib.exceptions.AuthenticationException;
+import com.mojang.authlib.properties.PropertyMap;
 import com.mojang.authlib.yggdrasil.YggdrasilAuthenticationService;
 import cpw.mods.modlauncher.Launcher;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.net.Proxy;
 import java.util.Arrays;
 import java.util.Locale;
@@ -122,9 +126,12 @@ public class LaunchTesting
         // hack the classloader now.
         try
         {
-            final Field sysPathsField = ClassLoader.class.getDeclaredField("sys_paths");
-            sysPathsField.setAccessible(true);
-            sysPathsField.set(null, null);
+            final Method initializePathMethod = ClassLoader.class.getDeclaredMethod("initializePath", String.class);
+            initializePathMethod.setAccessible(true);
+            final Object usrPathsValue = initializePathMethod.invoke(null, "java.library.path");
+            final Field usrPathsField = ClassLoader.class.getDeclaredField("usr_paths");
+            usrPathsField.setAccessible(true);
+            usrPathsField.set(null, usrPathsValue);
         }
         catch(Throwable t) {}
     }
@@ -153,10 +160,11 @@ public class LaunchTesting
             throw new RuntimeException(e); // don't set other variables
         }
 
+        Gson gson = (new GsonBuilder()).registerTypeAdapter(PropertyMap.class, new PropertyMap.Serializer()).create();
         args.put("username",       auth.getSelectedProfile().getName());
         args.put("uuid",           auth.getSelectedProfile().getId().toString().replace("-", ""));
         args.put("accessToken",    auth.getAuthenticatedToken());
-        args.put("userProperties", auth.getUserProperties().toString());
+        args.put("userProperties", gson.toJson(auth.getUserProperties()));
         return true;
     }
 }

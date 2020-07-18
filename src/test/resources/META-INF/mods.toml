@@ -53,3 +53,21 @@ loaderVersion="[28,)"
     modId="piston_event_test"
 [[mods]]
     modId="flower_pot_test"
+[[mods]]
+    modId="player_xp_event_test"
+[[mods]]
+    modId="forgeblockstatesloader"
+[[mods]]
+    modId="chunkwatchworldtest"
+[[mods]]
+    modId="custom_tnt_test"
+[[mods]]
+    modId="new_model_loader_test"
+[[mods]]
+    modId="global_loot_test"
+[[mods]]
+    modId="custom_plant_type_test"
+[[mods]]
+    modId="forgedebugmultilayermodel"
+[[mods]]
+    modId="stencil_backport_test"
